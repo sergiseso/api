@@ -1,0 +1,1079 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "version": "1.2",
+    "title": "IRIS API",
+    "description": "Web API to make requests to an IRIS back-end. ",
+    "contact": {
+      "name": "Unblur",
+      "url": "http://unblur.co/"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "servers": [
+    {
+      "url": "irisapi.tk"
+    }
+  ],
+  "tags": [
+    {
+      "name": "CRUD - Create Data"
+    },
+    {
+      "name": "CRUD - Request Data"
+    },
+    {
+      "name": "CRUD - Update Data"
+    },
+    {
+      "name": "Authorization"
+    },
+    {
+      "name": "Data check"
+    }
+  ],
+  "paths": {
+    "/login": {
+      "post": {
+        "tags": [
+          "Authorization"
+        ],
+        "description": "A JWT-based login end-point. Users provide a username/password pair together with the domain of the Iris DB they are logging into, and the server sends them the token generated that will allow them to use the rest of the API end-points.",
+        "operationId": "loginUser",
+        "requestBody": {
+          "content": {}
+        },
+        "responses": {
+          "200": {
+            "description": "Login was completed sucessfully. The server will provide the Authorization token that must be attached to the Authorization header in all requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/loginAnswer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Database error. Back-end returned an error message which is echoed to the API user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Login was not completed. The credentials the user provided were invalid for the domain specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/incident": {
+      "get": {
+        "tags": [
+          "CRUD - Request Data"
+        ],
+        "description": "A consultation request to check the existing incidents, open or closed, on the DB. The API replies with a JSON object containing an array list of all the entries on the incident table.",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "$ref": "#/components/schemas/authHeader"
+            },
+            "description": "The token received by the server on login."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns a JSON object with an array of all incidents.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/getincidentReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Login was not completed. The credentials the user provided were invalid for the domain specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Database error. The back-end returned an empty message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CRUD - Create Data"
+        ],
+        "description": "Creates a new incident on the IRIS DB. Requires permission to create incidents given by the IRIS administration.",
+        "operationId": "postincident",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "$ref": "#/components/schemas/authHeader"
+            },
+            "description": "The token received by the server on login."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/postIncidentBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns a JSON object representing the newly created incident object, including its id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/postIncidentReply"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Database error. Back-end returned an error message which is echoed to the API user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Login was not completed. The credentials the user provided were invalid for the domain specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Database error. The back-end returned an empty message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/editIncident": {
+      "post": {
+        "tags": [
+          "CRUD - Update Data"
+        ],
+        "description": "An update request to change data of an incident. The incident is specified by its number and the fields that can be changed are name, description, type, closed and location. Fields omitted will be left as they are. Location must be specified as a Point object, same as when creating an incident. By changing the closed tag to true or false the user can open or close the incident.",
+        "operationId": "editIncident",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "$ref": "#/components/schemas/authHeader"
+            },
+            "description": "The token received by the server on login."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/editIncidentBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns a JSON object representing the current values of the incident fields, even the ones that were not updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/editIncidentReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Login was not completed. The credentials the user provided were invalid for the domain specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Database error. The back-end returned an empty message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resource": {
+      "get": {
+        "tags": [
+          "CRUD - Request Data"
+        ],
+        "description": "A consultation request to check the existing resources. The server replies with a JSON object containing an array list of all the entries on the Agent table.",
+        "operationId": "getResource",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "$ref": "#/components/schemas/authHeader"
+            },
+            "description": "The token received by the server on login."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns an array of all the currently non-deleted resources.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/getResourceReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Login was not completed. The credentials the user provided were invalid for the domain specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Database error. The back-end returned an empty message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/incidentType": {
+      "get": {
+        "tags": [
+          "CRUD - Request Data"
+        ],
+        "description": "A consultation request to check the existing incident types. The server replies with a JSON object containing an array list of all the entries on the incidentType table.",
+        "operationId": "getincidentType",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "$ref": "#/components/schemas/authHeader"
+            },
+            "description": "The token received by the server on login."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns an array containing all incidentType objects, including their id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/getincidentTypeReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Login was not completed. The credentials the user provided were invalid for the domain specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Database error. The back-end returned an empty message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sendPosition": {
+      "post": {
+        "tags": [
+          "CRUD - Update Data"
+        ],
+        "description": "A request to send position data. The user provides a device identificator and a set of coordinates",
+        "operationId": "sendPosition",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "$ref": "#/components/schemas/authHeader"
+            },
+            "description": "The token received by the server on login."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/sendPositionBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful petition. Returns nothing."
+          },
+          "400": {
+            "description": "Database error. Back-end returned an error message which is echoed to the API user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Login was not completed. The credentials were invalid or the token was malforned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Database error. The back-end returned an empty message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assignResource": {
+      "post": {
+        "tags": [
+          "CRUD - Update Data"
+        ],
+        "description": "A request to assign a resource to a mission. Requires permission to edit resources given to the user the API logged as, given by the IRIS administrator. The user must provide the name of the resource (case insensitive) to be assigned and the number of the incident he is going to be assigned to, an incident number of -1 unassigns the resource from all incidents.",
+        "operationId": "assignResource",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "$ref": "#/components/schemas/authHeader"
+            },
+            "description": "The token received by the server on login."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/assignResourceBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful petition. Returns nothing."
+          },
+          "400": {
+            "description": "Database error. Back-end returned an error message which is echoed to the API user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Login was not completed. The credentials the user provided were invalid for the domain specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad gateway. There was some error on the database",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/isResourceAssigned": {
+      "post": {
+        "tags": [
+          "Data check"
+        ],
+        "description": "Checks whether a particular resource is assigned to a incident or not. User must provide the name of the resource.",
+        "operationId": "isResourceAssigned",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "$ref": "#/components/schemas/authHeader"
+            },
+            "description": "The token received by the server on login."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/isResourceAssignedBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful petition. Returns the name and number of the incident. If not assigned or resource not found, returns a void JSON.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/isResourceAssignedReply"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Database error. Back-end returned an error message which is echoed to the API user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Login was not completed. The credentials the user provided were invalid for the domain specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Database error. The back-end returned an empty message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "authHeader": {
+        "type": "string",
+        "description": "A token generated with the private key of the API, given to the client after Authorization.",
+        "example": "sInJvbGUiOiJhZG1pbiAgICAgIiwicGFzc3l"
+      },
+      "username": {
+        "type": "string",
+        "description": "The name of an existing user in the provided IRIS database.",
+        "example": "Mark Hamill"
+      },
+      "password": {
+        "type": "string",
+        "description": "A valid password.",
+        "example": "Securepassword"
+      },
+      "domain": {
+        "type": "string",
+        "description": "The root URL of the IRIS database to use, without specifying HTTP/HTTPS.",
+        "example": "irisexample.tk"
+      },
+      "token": {
+        "type": "string",
+        "description": "Missing if invalid request. Otherwise a valid JWT-based Authorization token, it must be attached on the Authorization field on the header of all requests as it is given (without a \"Basic\" or \"Bearer\" preceding keyword) in this field.",
+        "example": "sInJvbGUiOiJhZG1pbiAgICAgIiwicGFzc3l"
+      },
+      "loginAnswer": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "$ref": "#/components/schemas/token"
+          }
+        }
+      },
+      "id": {
+        "type": "integer",
+        "description": "A natural number identificator for an object. It takes any integer value from and including 0 and above.",
+        "example": 33
+      },
+      "incident": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/id"
+          },
+          "num": {
+            "$ref": "#/components/schemas/num"
+          },
+          "name": {
+            "type": "string",
+            "description": "A name for the event.",
+            "example": "Beach flooding"
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the event."
+          },
+          "latitude": {
+            "type": "number",
+            "description": "The latitude of the epicenter. 0 if the incident area is a shape instead of a circle."
+          },
+          "longitude": {
+            "type": "number",
+            "description": "The longitude of the epicenter. 0 if the incident area is a shape instead of a circle."
+          },
+          "radius": {
+            "type": "number",
+            "description": "The radius of the incident area. 0 if the incident area is a shape instead of a circle."
+          },
+          "closed": {
+            "type": "boolean",
+            "description": "If the event has been finished. If ommited it defaults to false",
+            "example": "true"
+          },
+          "type_name": {
+            "type": "string",
+            "description": "The type of the event.",
+            "example": "Flood"
+          }
+        }
+      },
+      "editIncidentReply": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "$ref": "#/components/schemas/success"
+          },
+          "num": {
+            "$ref": "#/components/schemas/num"
+          },
+          "name": {
+            "type": "string",
+            "description": "A name for the event.",
+            "example": "Beach flooding"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the event.",
+            "example": "Flood"
+          },
+          "description": {
+            "type": "string",
+            "description": "A description for the event."
+          },
+          "latitude": {
+            "type": "number",
+            "description": "The latitude of the epicenter."
+          },
+          "longitude": {
+            "type": "number",
+            "description": "The longitude of the epicenter."
+          },
+          "radius": {
+            "type": "number",
+            "description": "The radius of the incident area."
+          },
+          "closed": {
+            "type": "boolean",
+            "description": "Wether the incident is open or closed (resolved)."
+          }
+        }
+      },
+      "resource": {
+        "type": "object",
+        "description": "A collection of all the relevant fields of an Agent database entry.",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/id"
+          },
+          "name": {
+            "type": "string",
+            "description": "The resource name.",
+            "example": "Stephan"
+          },
+          "description": {
+            "type": "string",
+            "description": "Additional information about the resource."
+          },
+          "public_id": {
+            "type": "string",
+            "description": "A 4-character identifier for the resource.",
+            "example": "HAZ2"
+          },
+          "station": {
+            "type": "string",
+            "description": "The station the resource belongs to."
+          },
+          "incident": {
+            "type": "integer",
+            "description": "The identifier of the incident they are currently assigned to. -1 if none. Not to be mistaken by the mission number."
+          }
+        }
+      },
+      "getincidentReply": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "$ref": "#/components/schemas/success"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id_mission": {
+                  "$ref": "#/components/schemas/id"
+                },
+                "num": {
+                  "$ref": "#/components/schemas/num"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "A name for the event.",
+                  "example": "Beach flooding"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "A description for the event."
+                },
+                "latitude": {
+                  "type": "number",
+                  "description": "The latitude of the epicenter. 0 if the incident area is a shape instead of a circle."
+                },
+                "longitude": {
+                  "type": "number",
+                  "description": "The longitude of the epicenter. 0 if the incident area is a shape instead of a circle."
+                },
+                "radius": {
+                  "type": "number",
+                  "description": "The radius of the incident area. 0 if the incident area is a shape instead of a circle."
+                },
+                "closed": {
+                  "type": "boolean",
+                  "description": "If the event has been finished. If ommited it defaults to false",
+                  "example": "true"
+                },
+                "type_name": {
+                  "type": "string",
+                  "description": "The type of the event.",
+                  "example": "Flood"
+                }
+              }
+            },
+            "description": "An array of incident type objects"
+          }
+        }
+      },
+      "getResourceReply": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "$ref": "#/components/schemas/success"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/resource"
+            },
+            "description": "An array of Resource type objects."
+          }
+        }
+      },
+      "errorMessage": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "A flag indicating whether the petition was successful or not. If not, it should be expected that nothing has been modified on the database.",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "description": "The type of error, only if success flag is false."
+          },
+          "description": {
+            "type": "string",
+            "description": "Adds information to the error if possible, only if success flag is false."
+          }
+        }
+      },
+      "success": {
+        "type": "boolean",
+        "description": "A flag indicating whether the petition was successful or not. If not, it should be expected that nothing has been modified on the database.",
+        "example": true
+      },
+      "assignResourceBody": {
+        "type": "object",
+        "properties": {
+          "resourceName": {
+            "type": "string",
+            "description": "The name of the resource to be assigned to the specified incident, case insensitive.",
+            "example": "Alfonso"
+          },
+          "incidentNum": {
+            "type": "integer",
+            "description": "The number of the incident to assign the resource to.",
+            "example": 33
+          }
+        }
+      },
+      "sendPositionBody": {
+        "type": "object",
+        "properties": {
+          "id_device": {
+            "type": "string",
+            "description": "The identificator of the device.",
+            "example": "A5-F9-13-4E"
+          },
+          "position": {
+            "type": "object",
+            "description": "A GeoJSON object containing the new position. It must be a Point with a valid set of WGS84 coordinates. Any other properties will be ignored. If the object does not contain a single Point it will not be accepted.",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Contains the type of GeoJSON object being sent. Must be Feature.",
+                "example": "Feature"
+              },
+              "geometry": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Contains the type of geometry being described. Must be a Point.",
+                    "example": "Point"
+                  },
+                  "coordinates": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "description": "Contains the latitude and longitude WGS84 coordinates as an array of two entries [latitude, longitude].",
+                    "example": [
+                      41.3859,
+                      2.1972
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "isResourceAssignedBody": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "type": "string",
+            "description": "The name of the resource to check.",
+            "example": "Mark"
+          }
+        }
+      },
+      "incidentType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/id"
+          },
+          "name": {
+            "type": "string",
+            "description": "A short name describing the type of emergency.",
+            "example": "Fire"
+          },
+          "color": {
+            "type": "string",
+            "description": "The RGB hex code of the emergency color.",
+            "example": "#F23F07"
+          }
+        }
+      },
+      "getincidentTypeReply": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/incidentType"
+            },
+            "description": "An array of incidentType type objects"
+          }
+        }
+      },
+      "num": {
+        "type": "integer",
+        "description": "Optional. The number assigned to the incident. While the \"id\" field is the DB entry identificator, this number can be set on incident creation.",
+        "example": 143
+      },
+      "postIncidentBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "A name for the event.",
+            "example": "Beach flooding"
+          },
+          "type": {
+            "type": "string",
+            "description": "The type of the incident. It must be a name inside the list of incident types, case insensitive. If any other string is inputted, the type will default to one in the list.",
+            "example": "Flood"
+          },
+          "radius": {
+            "type": "integer",
+            "description": "The radius in meters of the event area. Defaults to 100m if omitted",
+            "example": 25
+          },
+          "epicenter": {
+            "type": "object",
+            "description": "A GeoJSON object containing the center of the event area. It must be a Point with a valid set of WGS84 coordinates. Any other properties will be ignored. If the object does not contain a single Point it will not be accepted.",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Contains the type of GeoJSON object being sent. Must be Feature.",
+                "example": "Feature"
+              },
+              "geometry": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Contains the type of geometry being described. Must be a Point.",
+                    "example": "Point"
+                  },
+                  "coordinates": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "description": "Contains the latitude and longitude WGS84 coordinates as an array of two entries [latitude, longitude].",
+                    "example": [
+                      41.3859,
+                      2.1972
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "num": {
+            "$ref": "#/components/schemas/num"
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "description": "An array of resource names that will be inmediately assigned to the mission. If a name is wrong it will be ignored without returning any warning.",
+            "example": [
+              {
+                "name": "Primero"
+              },
+              {
+                "name": "Segundo"
+              }
+            ]
+          }
+        }
+      },
+      "postIncidentReply": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "$ref": "#/components/schemas/success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/incident"
+          }
+        }
+      },
+      "editIncidentBody": {
+        "type": "object",
+        "properties": {
+          "num": {
+            "type": "number",
+            "description": "Mandatory. The number of the incident that will be updated.",
+            "example": 1001
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional. A name to insert into the specified incident",
+            "example": "Beach flooding"
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional. A new description for the incident",
+            "example": "Water level increased 5 meters."
+          },
+          "type": {
+            "type": "string",
+            "description": "Optional. The new type to be inserted into the specified incident. It must be a name inside the list of incident types, case insensitive. If any other string is inputted, the type will default to one in the list.",
+            "example": "Flood"
+          },
+          "radius": {
+            "type": "integer",
+            "description": "Optional if not \"epicenter\" field, otherwise mandatory. The new radius in meters for the incident.",
+            "example": 25
+          },
+          "epicenter": {
+            "type": "object",
+            "description": "A GeoJSON object containing the center of the event area. It must be a Point with a valid set of WGS84 coordinates. Any other properties will be ignored. If the object does not contain a single Point it will not be accepted.",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Contains the type of GeoJSON object being sent. Must be Feature.",
+                "example": "Feature"
+              },
+              "geometry": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Contains the type of geometry being described. Must be a Point.",
+                    "example": "Point"
+                  },
+                  "coordinates": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "description": "Contains the latitude and longitude WGS84 coordinates as an array of two entries [latitude, longitude].",
+                    "example": [
+                      41.3859,
+                      2.1972
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "assignResourceReply": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "$ref": "#/components/schemas/success"
+          }
+        }
+      },
+      "isResourceAssignedReply": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "$ref": "#/components/schemas/success"
+          },
+          "num": {
+            "type": "integer",
+            "description": "The number of the incident",
+            "example": 4404
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the incident",
+            "example": 5
+          }
+        }
+      }
+    }
+  }
+}
